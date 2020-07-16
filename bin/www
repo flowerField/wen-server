@@ -1,0 +1,44 @@
+#! /usr/bin/env node
+
+console.log("启动静态服务...");
+
+/* 01-核心模块 */
+const config = require("./config");
+const Server = require("../src/server");
+const { program } = require("commander");
+const { version } = require("../package.json");
+
+
+/* 02-设置命令 */
+Object.values(config).forEach(val => {
+    if (val.option) {
+        program.option(val.option, val.description);
+    }
+})
+
+program.on("--help", () => {
+    console.log("\r\nExample:");
+    Object.values(config).forEach(val => {
+        if (val.usage) {
+            console.log("  " + val.usage);
+        }
+    })
+});
+
+program.name("wen-server");
+program.usage("[options]");
+program.version(version);
+
+/* 03-配置信息处理 */
+let argvParseObj = program.parse(process.argv);
+
+let configValue = {};
+Object.keys(config).forEach(key => {
+    configValue[key] = argvParseObj[key] || config[key].default;
+})
+
+console.log("configValue", configValue);
+
+/* 04-创建http-server实例并启动服务 */
+let server = new Server(configValue);
+server.start();
